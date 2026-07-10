@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Trading Signals Dashboard</title>
+    <style>
+        body { background-color: #090d16; color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .phone-container { width: 380px; background: #0d1220; border-radius: 30px; border: 4px solid #1e2640; padding: 20px; box-shadow: 0px 0px 25px rgba(0, 230, 118, 0.1); }
+        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .header { color: #ff6b00; font-size: 22px; font-weight: bold; }
+        .user-info { font-size: 11px; color: #8a99ad; margin-bottom: 15px; background: #141c30; padding: 6px 12px; border-radius: 8px; display: flex; justify-content: space-between; border: 1px solid #1e2640; }
+        .expiry-text { color: #ffd600; font-weight: bold; }
+        .asset-select { background: #141c30; color: #ff6b00; border: 1px solid #ff6b00; border-radius: 8px; padding: 5px 10px; font-weight: bold; outline: none; cursor: pointer; }
+        .time-tabs { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .tab { flex: 1; background: #141c30; border: 1px solid #253354; color: #8a99ad; padding: 8px 0; text-align: center; border-radius: 8px; margin: 0 4px; cursor: pointer; font-weight: bold; }
+        .tab.active { border: 1px solid #ff6b00; color: #ff6b00; background: rgba(255, 107, 0, 0.1); }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 10px; text-align: center; }
+        .stat-label { font-size: 10px; color: #6b7280; text-transform: uppercase; }
+        .stat-value { font-size: 16px; font-weight: bold; margin-top: 5px; }
+        .green-text { color: #00e676; } .blue-text { color: #00b0ff; } .yellow-text { color: #ffd600; }
+        .strategy-text { font-size: 11px; color: #9ca3af; background: #111827; padding: 8px; border-radius: 6px; margin-bottom: 15px; line-height: 1.4; }
+        .bias-section { background: #111827; padding: 12px; border-radius: 12px; margin-bottom: 15px; }
+        .bias-title { font-size: 11px; color: #9ca3af; margin-bottom: 5px;}
+        .bias-status { font-size: 16px; font-weight: bold; color: #00e676; }
+        .progress-bar { background: #1f2937; height: 6px; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+        .progress-fill { background: #00e676; height: 100%; width: 50%; transition: width 0.5s ease; }
+        .signal-box { background: rgba(0, 176, 255, 0.05); border: 1px solid #00b0ff; border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .timer { font-size: 24px; font-weight: bold; color: #ffd600; }
+        .prediction-box { background: #0d1220; border: 2px dashed #374151; border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 15px; }
+        .prediction-title { font-size: 12px; color: #9ca3af; text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
+        .prediction-result { font-size: 26px; font-weight: bold; text-transform: uppercase; }
+        .history-box { background: #111827; padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #1f2937; }
+        .history-title { font-size: 11px; color: #9ca3af; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+        .history-table th { color: #6b7280; padding: 6px 4px; border-bottom: 1px solid #1f2937; }
+        .history-table td { padding: 6px 4px; border-bottom: 1px solid #1f2937; }
+        .badge-win { background: rgba(0, 230, 118, 0.15); color: #00e676; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .badge-loss { background: rgba(255, 23, 68, 0.15); color: #ff1744; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .btn-generate { background: linear-gradient(90deg, #ff6b00, #ff8c00); color: white; border: none; width: 100%; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 12px; cursor: pointer; text-transform: uppercase; margin-bottom: 15px; transition: 0.3s; }
+        .btn-generate:disabled { opacity: 0.6; cursor: not-allowed; }
+        .chart-container { height: 220px; background: #111827; border-radius: 12px; overflow: hidden; }
+    </style>
+</head>
+<body>
+
+<div class="phone-container">
+    <div class="header-container">
+        <div class="header">MARKET AI</div>
+        <div style="display: flex; align-items: center;">
+            <select class="asset-select" id="asset-select" onchange="changeAsset()">
+                <option value="EURJPY">EUR/JPY</option>
+                <option value="EURUSD">EUR/USD</option>
+                <option value="GBPUSD">GBP/USD</option>
+                <option value="USDJPY">USD/JPY</option>
+            </select>
+            <a href="/logout" style="color: #ff1744; text-decoration: none; font-size: 11px; font-weight: bold; margin-left: 10px; border: 1px solid #ff1744; padding: 4px 8px; border-radius: 6px;">LOGOUT</a>
+        </div>
+    </div>
+
+    <div class="user-info">
+        <div>User: <span style="color: #ffffff; font-weight: bold;">{{ username }}</span></div>
+        <div>Validity: <span class="expiry-text">{{ expiry }}</span></div>
+    </div>
+    
+    <div class="time-tabs">
+        <div class="tab active" data-tf="1m">1M</div>
+        <div class="tab" data-tf="2m">2M</div>
+        <div class="tab" data-tf="5m">5M</div>
+        <div class="tab" data-tf="15m">15M</div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-box"><div class="stat-label">Accuracy</div><div class="stat-value green-text" id="accuracy">--%</div></div>
+        <div class="stat-box"><div class="stat-label">Stability</div><div class="stat-value blue-text" id="stability">--%</div></div>
+        <div class="stat-box"><div class="stat-label">AI Matrix</div><div class="stat-value yellow-text" id="ai-matrix">--</div></div>
+    </div>
+
+    <div class="bias-section">
+        <div class="bias-title">MARKET BIAS</div>
+        <div class="bias-status" id="bias-text">Analysing...</div>
+        <div class="progress-bar"><div class="progress-fill" id="bias-bar"></div></div>
+    </div>
+
+    <div class="signal-box">
+        <div>
+            <div style="font-size: 14px; font-weight: bold; color: #00b0ff;" id="signal-header">Next Signal: EUR/JPY</div>
+        </div>
+        <div class="timer" id="countdown">0:00</div>
+    </div>
+
+    <div class="prediction-box" id="pred-box">
+        <div class="prediction-title">Next Candle Prediction</div>
+        <div class="prediction-result" id="final-signal">ANALYSING...</div>
+    </div>
+
+    <div class="history-box">
+        <div class="history-title">Recent Signals History</div>
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Asset</th>
+                    <th>Signal</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody id="history-rows">
+            </tbody>
+        </table>
+    </div>
+
+    <button class="btn-generate" id="gen-btn" onclick="generateNewSignal()">GENERATE SIGNAL</button>
+    <div class="chart-container" id="chart-div"></div>
+</div>
+
+<script src="https://s3.tradingview.com/tv.js"></script>
+<script>
+    let currentTF = '1m';
+    let currentAsset = 'EURJPY';
+    
+    // ⏱️ ലൈവ് മാർക്കറ്റ് ടൈം വെച്ച് അടുത്ത കാൻഡിൽ ടൈം കണക്കാക്കുന്ന ഫങ്ക്ഷൻ
+    function getNextCandleTime(tf) {
+        const now = new Date().getTime();
+        let tfMs = 60000; // 1M = 60,000 milliseconds
+        
+        if (tf === '2m') tfMs = 2 * 60000;
+        if (tf === '5m') tfMs = 5 * 60000;
+        if (tf === '15m') tfMs = 15 * 60000;
+        
+        let nextTime = Math.ceil(now / tfMs) * tfMs;
+        
+        // കൃത്യം 00 സെക്കൻഡ് ആണെങ്കിൽ അടുത്ത കാൻഡിൽ എടുക്കാൻ
+        if (nextTime === now) {
+            nextTime += tfMs;
+        }
+        return nextTime;
+    }
+
+    let nextCandleTime = getNextCandleTime(currentTF);
+
+    function updateTimer() {
+        const now = new Date().getTime();
+        let remaining = Math.floor((nextCandleTime - now) / 1000);
+
+        if (remaining <= 0) {
+            document.getElementById('countdown').innerHTML = `0:00`;
+            generateNewSignal(); 
+            nextCandleTime = getNextCandleTime(currentTF); 
+        } else {
+            let m = Math.floor(remaining / 60);
+            let s = remaining % 60;
+            s = s < 10 ? '0' + s : s;
+            document.getElementById('countdown').innerHTML = `${m}:${s}`;
+        }
+    }
+    setInterval(updateTimer, 1000);
+
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            currentTF = this.getAttribute('data-tf');
+            
+            // ടൈംഫ്രെയിം മാറുമ്പോൾ യഥാർത്ഥ സമയം വെച്ച് ടൈമർ റീസെറ്റ് ആകുന്നു
+            nextCandleTime = getNextCandleTime(currentTF);
+            generateNewSignal(); 
+        });
+    });
+
+    function changeAsset() {
+        currentAsset = document.getElementById('asset-select').value;
+        loadChart();
+        generateNewSignal();
+    }
+
+    function loadChart() {
+        document.getElementById('chart-div').innerHTML = `<div id="tradingview_chart" style="height:100%;width:100%;"></div>`;
+        new TradingView.widget({
+            "autosize": true, "symbol": "FX:" + currentAsset, "interval": "1",
+            "theme": "dark", "style": "1", "locale": "en", "hide_side_toolbar": true,
+            "container_id": "tradingview_chart"
+        });
+    }
+
+    function generateNewSignal() {
+        let btn = document.getElementById('gen-btn');
+        btn.innerText = "GENERATING...";
+        btn.disabled = true;
+        
+        document.getElementById('final-signal').innerText = "ANALYSING...";
+        document.getElementById('final-signal').style.color = "#9ca3af";
+        document.getElementById('pred-box').style.borderColor = "#374151";
+
+        fetch(`/api/signal?tf=${currentTF}&asset=${currentAsset}`)
+            .then(response => response.json())
+            .then(data => {
+                if(data.error) { window.location.href = "/"; return; }
+                
+                document.getElementById('accuracy').innerText = data.accuracy;
+                document.getElementById('stability').innerText = data.stability;
+                document.getElementById('ai-matrix').innerText = data.ai_matrix;
+                document.getElementById('bias-text').innerText = data.bias_type + " " + data.bias_val + "%";
+                
+                let displayAsset = currentAsset.slice(0,3) + "/" + currentAsset.slice(3);
+                document.getElementById('signal-header').innerText = `Next Signal (${data.timeframe}): ${displayAsset}`;
+                
+                let bar = document.getElementById('bias-bar');
+                bar.style.width = data.bias_val + '%';
+                bar.style.backgroundColor = data.bias_type === 'Bullish' ? '#00e676' : (data.bias_type === 'Bearish' ? '#ff1744' : '#ffd600');
+                document.getElementById('bias-text').style.color = bar.style.backgroundColor;
+
+                let finalSignalEl = document.getElementById('final-signal');
+                let predBoxEl = document.getElementById('pred-box');
+                finalSignalEl.innerText = data.signal_action;
+                
+                if (data.signal_action.includes('CALL')) {
+                    finalSignalEl.style.color = '#00e676'; predBoxEl.style.borderColor = '#00e676';
+                } else if (data.signal_action.includes('PUT')) {
+                    finalSignalEl.style.color = '#ff1744'; predBoxEl.style.borderColor = '#ff1744';
+                } else {
+                    finalSignalEl.style.color = '#ffd600'; predBoxEl.style.borderColor = '#374151';
+                }
+
+                let historyHtml = '';
+                data.history.forEach(trade => {
+                    let badgeClass = trade.result === 'WIN' ? 'badge-win' : 'badge-loss';
+                    let signalColor = trade.type === 'CALL' ? '#00e676' : '#ff1744';
+                    historyHtml += `<tr>
+                        <td>${trade.time}</td>
+                        <td>${trade.asset}</td>
+                        <td style="color:${signalColor}; font-weight:bold;">${trade.type}</td>
+                        <td><span class="${badgeClass}">${trade.result}</span></td>
+                    </tr>`;
+                });
+                document.getElementById('history-rows').innerHTML = historyHtml;
+                
+                btn.innerText = "GENERATE SIGNAL";
+                btn.disabled = false;
+                
+            }).catch(() => {
+                btn.innerText = "GENERATE SIGNAL";
+                btn.disabled = false;
+            });
+    }
+
+    window.onload = function() { loadChart(); generateNewSignal(); };
+</script>
+</body>
+</html>

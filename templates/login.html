@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AI Trading Signals</title>
+    <style>
+        body { background-color: #090d16; color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-container { width: 320px; background: #0d1220; border-radius: 20px; border: 2px solid #1e2640; padding: 30px; box-shadow: 0px 0px 25px rgba(0, 176, 255, 0.15); text-align: center; }
+        .logo { color: #ff6b00; font-size: 24px; font-weight: bold; margin-bottom: 5px; }
+        .sub-text { font-size: 12px; color: #6b7280; margin-bottom: 25px; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { font-size: 12px; color: #9ca3af; margin-bottom: 5px; display: block; font-weight: bold; }
+        .input-group input { width: 100%; padding: 12px; background: #141c30; border: 1px solid #253354; border-radius: 8px; color: white; outline: none; box-sizing: border-box; }
+        .input-group input:focus { border-color: #00b0ff; }
+        .btn-login { background: linear-gradient(90deg, #00b0ff, #0081cb); color: white; border: none; width: 100%; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; margin-top: 10px; box-shadow: 0px 4px 15px rgba(0, 176, 255, 0.3); }
+        .error-msg { color: #ff1744; font-size: 13px; margin-bottom: 15px; font-weight: bold; }
+        .divider { margin: 20px 0; border-bottom: 1px dashed #374151; position: relative; }
+        .divider span { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #0d1220; padding: 0 10px; color: #6b7280; font-size: 12px; font-weight: bold; }
+        .btn-telegram { background: #229ED9; color: white; border: none; width: 100%; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; text-decoration: none; display: block; box-sizing: border-box; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <div class="logo">MARKET AI</div>
+    <div class="sub-text">Premium Trading Signals Dashboard</div>
+
+    {% if error %}
+    <div class="error-msg">{{ error }}</div>
+    {% endif %}
+
+    <form action="/login" method="POST">
+        <div class="input-group">
+            <label>USERNAME</label>
+            <input type="text" name="username" required placeholder="Enter your username">
+        </div>
+        <div class="input-group">
+            <label>PASSWORD</label>
+            <input type="password" name="password" required placeholder="Enter your password">
+        </div>
+        <button type="submit" class="btn-login">LOGIN NOW</button>
+    </form>
+
+    <div class="divider"><span>OR</span></div>
+
+    <div style="font-size: 12px; color: #9ca3af; margin-bottom: 10px;">Don't have an account?</div>
+    
+    <a href="https://t.me/Shijinrajsl" target="_blank" class="btn-telegram">
+        GET PREMIUM ACCESS (TELEGRAM)
+    </a>
+</div>
+
+</body>
+</html>
