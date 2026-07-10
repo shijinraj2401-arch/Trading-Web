@@ -1,0 +1,6 @@
+flask
+yfinance
+pandas
+ta
+firebase-admin
+gunicorn
