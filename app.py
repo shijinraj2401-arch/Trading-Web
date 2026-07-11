@@ -5,9 +5,8 @@ import ta
 import math
 import random
 import os
+import json
 from datetime import datetime, timedelta
-import firebase_admin
-from firebase_admin import credentials, db
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_trading_key_123'
@@ -15,17 +14,22 @@ app.secret_key = 'super_secret_trading_key_123'
 ADMIN_USERNAME = "shijin_admin"       
 ADMIN_PASSWORD = "Secure@Trade2026#"   
 
-# --- ഫയർബേസ് കണക്ഷൻ (ഡയറക്റ്റ് ഫയൽ വഴി) ---
-try:
-    # നിങ്ങളുടെ ഗിറ്റ്ഹബ്ബിൽ firebase_key.json എന്ന ഫയൽ ഉണ്ടെന്ന് ഉറപ്പാക്കുക
-    cred = credentials.Certificate("firebase_key.json")
-    if not firebase_admin._apps:
-        firebase_admin.initialize_app(cred, {
-            'databaseURL': 'https://tradingvip-default-rtdb.firebaseio.com/'
-        })
-except Exception as e:
-    print("Firebase connection error:", e)
-# ---------------------------------------------------------
+# --- പുതിയ ഡാറ്റാബേസ് സിസ്റ്റം (No Firebase) ---
+DB_FILE = "users_db.json"
+
+def load_users():
+    if not os.path.exists(DB_FILE):
+        return {}
+    with open(DB_FILE, 'r') as f:
+        try:
+            return json.load(f)
+        except:
+            return {}
+
+def save_users(users):
+    with open(DB_FILE, 'w') as f:
+        json.dump(users, f)
+# ----------------------------------------------
 
 @app.route('/')
 def login_page():
@@ -42,30 +46,25 @@ def login():
         session['user'] = 'admin'
         return redirect(url_for('admin_panel'))
         
-    try:
-        user_ref = db.reference(f'users/{username}')
-        user_data = user_ref.get()
+    users = load_users()
+    user_data = users.get(username)
+    
+    if user_data and user_data.get('password') == password:
+        expiry_date = datetime.strptime(user_data.get('expiry'), "%Y-%m-%d")
+        if datetime.now() > expiry_date:
+            return render_template('login.html', error="Subscription Expired! Contact Admin via Telegram.")
         
-        if user_data and user_data.get('password') == password:
-            expiry_date = datetime.strptime(user_data.get('expiry'), "%Y-%m-%d")
-            if datetime.now() > expiry_date:
-                return render_template('login.html', error="Subscription Expired! Contact Admin via Telegram.")
-            
-            session['user'] = username
-            return redirect(url_for('dashboard'))
-        else:
-            return render_template('login.html', error="Invalid Username or Password!")
-    except Exception as e:
-        print(e)
-        return render_template('login.html', error="Database connection error! Check Firebase Key.")
+        session['user'] = username
+        return redirect(url_for('dashboard'))
+    else:
+        return render_template('login.html', error="Invalid Username or Password!")
 
 @app.route('/admin', methods=['GET'])
 def admin_panel():
     if session.get('user') != 'admin':
         return "Unauthorized", 401
-    users_ref = db.reference('users')
-    users_data = users_ref.get()
-    return render_template('admin.html', users=users_data if users_data else {})
+    users_data = load_users()
+    return render_template('admin.html', users=users_data)
 
 @app.route('/admin/add_user', methods=['POST'])
 def add_user():
@@ -73,8 +72,11 @@ def add_user():
     username = request.form.get('username')
     password = request.form.get('password')
     expiry = request.form.get('expiry')
-    user_ref = db.reference(f'users/{username}')
-    user_ref.set({'password': password, 'expiry': expiry})
+    
+    users = load_users()
+    users[username] = {'password': password, 'expiry': expiry}
+    save_users(users)
+    
     return redirect(url_for('admin_panel'))
 
 @app.route('/logout')
@@ -89,7 +91,8 @@ def dashboard():
     current_user = session['user']
     user_expiry = "Unlimited"
     if current_user != 'admin':
-        user_data = db.reference(f'users/{current_user}').get()
+        users = load_users()
+        user_data = users.get(current_user)
         user_expiry = user_data.get('expiry', 'N/A') if user_data else 'N/A'
     return render_template('index.html', expiry=user_expiry, username=current_user)
 
