@@ -88,6 +88,7 @@
             text-transform: uppercase;
             transition: 0.3s;
             box-shadow: 0 4px 12px rgba(0,204,102,0.2);
+            text-align: center;
         }
         .partner-btn:hover { background-color: #00b359; }
         
@@ -102,6 +103,7 @@
             margin-top: 8px;
             font-size: 12px;
             transition: 0.3s;
+            text-align: center;
         }
         .telegram-btn:hover { background-color: #0077b3; }
 
@@ -176,27 +178,30 @@
         <div class="error">{{ error }}</div>
         {% endif %}
         
+        <!-- Activation Steps Box -->
         <div class="activation-box">
             <div class="activation-header">⚡ Activate Your Access (FREE)</div>
             <div class="step-item"><span class="step-number">1</span> Create a free Quotex account via link below</div>
             <div class="step-item"><span class="step-number">2</span> Deposit funds and copy your <b>Quotex Trader ID</b></div>
             <div class="step-item"><span class="step-number">3</span> Send ID on Telegram to get credentials instantly</div>
             
-            <a href="YOUR_QUOTEX_AFFILIATE_LINK" target="_blank" class="partner-btn">
+            <a href="https://broker-qx.pro/sign-up/?lid=2205200" target="_blank" class="partner-btn">
                 🔗 Create Quotex Account
             </a>
             
-            <a href="https://t.me/YOUR_TELEGRAM_USERNAME" target="_blank" class="telegram-btn">
-                ✈️ Send ID - @YOUR_TELEGRAM_USERNAME
+            <a href="https://t.me/Shijinrajsl" target="_blank" class="telegram-btn">
+                ✈️ Send ID - @Shijinrajsl
             </a>
         </div>
         
+        <!-- System Login Form -->
         <form method="POST" action="/login">
             <input type="text" name="username" placeholder="Trader ID / Username" required>
             <input type="password" name="password" placeholder="Access Key" required>
             <button type="submit" class="submit-btn">Initiate System</button>
         </form>
         
+        <!-- Hype Artificial AI Badges -->
         <div class="badge-container">
             <span class="tech-badge">• ChatGPT 4o</span>
             <span class="tech-badge">• Grok 2</span>
