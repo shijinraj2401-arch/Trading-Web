@@ -4,8 +4,9 @@ import pandas as pd
 import ta
 import math
 import os
-import json
 from datetime import datetime, timedelta
+import firebase_admin
+from firebase_admin import credentials, db
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_trading_key_123'
@@ -13,21 +14,15 @@ app.secret_key = 'super_secret_trading_key_123'
 ADMIN_USERNAME = "shijin_admin"       
 ADMIN_PASSWORD = "Secure@Trade2026#"   
 
-# --- പുതിയ ഡാറ്റാബേസ് സിസ്റ്റം ---
-DB_FILE = "users_db.json"
-
-def load_users():
-    if not os.path.exists(DB_FILE):
-        return {}
-    with open(DB_FILE, 'r') as f:
-        try:
-            return json.load(f)
-        except:
-            return {}
-
-def save_users(users):
-    with open(DB_FILE, 'w') as f:
-        json.dump(users, f)
+# --- ഫയർബേസ് പെർമനന്റ് ഡാറ്റാബേസ് ---
+try:
+    cred = credentials.Certificate("firebase_key.json")
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(cred, {
+            'databaseURL': 'https://tradingvip-default-rtdb.firebaseio.com//'
+        })
+except Exception as e:
+    print("Firebase connection error:", e)
 # ----------------------------------------------
 
 @app.route('/')
@@ -45,25 +40,29 @@ def login():
         session['user'] = 'admin'
         return redirect(url_for('admin_panel'))
         
-    users = load_users()
-    user_data = users.get(username)
-    
-    if user_data and user_data.get('password') == password:
-        expiry_date = datetime.strptime(user_data.get('expiry'), "%Y-%m-%d")
-        if datetime.now() > expiry_date:
-            return render_template('login.html', error="Subscription Expired! Contact Admin.")
+    try:
+        user_ref = db.reference(f'users/{username}')
+        user_data = user_ref.get()
         
-        session['user'] = username
-        return redirect(url_for('dashboard'))
-    else:
-        return render_template('login.html', error="Invalid Username or Password!")
+        if user_data and user_data.get('password') == password:
+            expiry_date = datetime.strptime(user_data.get('expiry'), "%Y-%m-%d")
+            if datetime.now() > expiry_date:
+                return render_template('login.html', error="Subscription Expired! Contact Admin via Telegram.")
+            
+            session['user'] = username
+            return redirect(url_for('dashboard'))
+        else:
+            return render_template('login.html', error="Invalid Username or Password!")
+    except Exception as e:
+        return render_template('login.html', error="Database Connection Error!")
 
 @app.route('/admin', methods=['GET'])
 def admin_panel():
     if session.get('user') != 'admin':
         return "Unauthorized", 401
-    users_data = load_users()
-    return render_template('admin.html', users=users_data)
+    users_ref = db.reference('users')
+    users_data = users_ref.get()
+    return render_template('admin.html', users=users_data if users_data else {})
 
 @app.route('/admin/add_user', methods=['POST'])
 def add_user():
@@ -72,9 +71,8 @@ def add_user():
     password = request.form.get('password')
     expiry = request.form.get('expiry')
     
-    users = load_users()
-    users[username] = {'password': password, 'expiry': expiry}
-    save_users(users)
+    user_ref = db.reference(f'users/{username}')
+    user_ref.set({'password': password, 'expiry': expiry})
     
     return redirect(url_for('admin_panel'))
 
@@ -90,8 +88,7 @@ def dashboard():
     current_user = session['user']
     user_expiry = "Unlimited"
     if current_user != 'admin':
-        users = load_users()
-        user_data = users.get(current_user)
+        user_data = db.reference(f'users/{current_user}').get()
         user_expiry = user_data.get('expiry', 'N/A') if user_data else 'N/A'
     return render_template('index.html', expiry=user_expiry, username=current_user)
 
@@ -117,9 +114,8 @@ def get_signal():
         df['BB_High'] = indicator_bb.bollinger_hband()
         df['BB_Low'] = indicator_bb.bollinger_lband()
         
-        # --- WEEKEND CHECK (ശനി, ഞായർ പരിശോധന) ---
         now = datetime.now()
-        is_weekend = now.weekday() >= 5  # 5=Saturday, 6=Sunday
+        is_weekend = now.weekday() >= 5
         
         if is_weekend:
             signal_action = "MARKET CLOSED"
@@ -165,25 +161,18 @@ def get_signal():
                 signal_action, bias_type, bias_val = "WAIT", "Neutral", 50
             accuracy = min(99, max(75, bias_val + 5)) 
 
-        # --- 100% REAL HISTORY (NO FAKE RANDOM) ---
         past_trades = []
         if len(df) >= 7:
-            for i in range(1, 6): # കഴിഞ്ഞ 5 കാൻഡിലുകൾ മാത്രം
+            for i in range(1, 6):
                 try:
-                    hist_row = df.iloc[-(i+2)] # സിഗ്നൽ കിട്ടിയ കാൻഡിൽ
-                    result_row = df.iloc[-(i+1)] # റിസൾട്ട് വന്ന കാൻഡിൽ
+                    hist_row = df.iloc[-(i+2)]
+                    result_row = df.iloc[-(i+1)]
                     
-                    # യഥാർത്ഥ സിഗ്നൽ എന്തായിരുന്നു?
                     h_rsi = hist_row['RSI'] if not math.isnan(hist_row['RSI']) else 50
                     h_signal = "CALL" if h_rsi >= 50 else "PUT"
-                    
-                    # യഥാർത്ഥ മാർക്കറ്റ് ഏതു വശത്തേക്കാണ് പോയത്?
                     actual_move = "CALL" if result_row['Close'] > result_row['Open'] else "PUT"
-                    
-                    # ശരിക്കും വിൻ ആണോ ലോസ്സ് ആണോ എന്ന് നോക്കുന്നു
                     res = "WIN" if h_signal == actual_move else "LOSS"
                     
-                    # സമയം എടുക്കുന്നു
                     dt_obj = result_row.name
                     time_str = dt_obj.strftime("%I:%M %p") if hasattr(dt_obj, 'strftime') else (now - timedelta(minutes=i)).strftime("%I:%M %p")
                     
