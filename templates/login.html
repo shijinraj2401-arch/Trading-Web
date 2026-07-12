@@ -3,53 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - AI Trading Signals</title>
+    <title>Market AI - Advanced Binary Bot</title>
     <style>
-        body { background-color: #090d16; color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .login-container { width: 320px; background: #0d1220; border-radius: 20px; border: 2px solid #1e2640; padding: 30px; box-shadow: 0px 0px 25px rgba(0, 176, 255, 0.15); text-align: center; }
-        .logo { color: #ff6b00; font-size: 24px; font-weight: bold; margin-bottom: 5px; }
-        .sub-text { font-size: 12px; color: #6b7280; margin-bottom: 25px; }
-        .input-group { margin-bottom: 15px; text-align: left; }
-        .input-group label { font-size: 12px; color: #9ca3af; margin-bottom: 5px; display: block; font-weight: bold; }
-        .input-group input { width: 100%; padding: 12px; background: #141c30; border: 1px solid #253354; border-radius: 8px; color: white; outline: none; box-sizing: border-box; }
-        .input-group input:focus { border-color: #00b0ff; }
-        .btn-login { background: linear-gradient(90deg, #00b0ff, #0081cb); color: white; border: none; width: 100%; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; margin-top: 10px; box-shadow: 0px 4px 15px rgba(0, 176, 255, 0.3); }
-        .error-msg { color: #ff1744; font-size: 13px; margin-bottom: 15px; font-weight: bold; }
-        .divider { margin: 20px 0; border-bottom: 1px dashed #374151; position: relative; }
-        .divider span { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #0d1220; padding: 0 10px; color: #6b7280; font-size: 12px; font-weight: bold; }
-        .btn-telegram { background: #229ED9; color: white; border: none; width: 100%; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; text-decoration: none; display: block; box-sizing: border-box; margin-top: 10px; }
+        body { 
+            background-color: #06090e; 
+            color: white; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            padding: 20px 0;
+        }
+        .container { 
+            background-color: #0b111e; 
+            padding: 30px 25px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7); 
+            width: 90%; 
+            max-width: 360px; 
+            text-align: center; 
+            border: 1px solid #1f293d;
+        }
+        .bot-title {
+            color: #ff6600;
+            font-size: 24px;
+            font-weight: 800;
+            margin: 0 0 5px 0;
+            letter-spacing: 1px;
+        }
+        .bot-subtitle {
+            color: #8492a6;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+        }
+        
+        /* Activation Box Rules */
+        .activation-box {
+            border: 1px solid #00ff88;
+            background-color: rgba(0, 255, 136, 0.03);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        .activation-header {
+            color: #00ff88;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            display: flex;
+            align-items: center;
+        }
+        .step-item {
+            font-size: 12px;
+            color: #b0c4de;
+            margin: 6px 0;
+            line-height: 1.4;
+        }
+        .step-number {
+            background-color: #1a2333;
+            color: #00ff88;
+            padding: 2px 6px;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        /* Buttons */
+        .partner-btn {
+            background-color: #00cc66;
+            color: white;
+            padding: 12px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            display: block;
+            margin-top: 12px;
+            font-size: 13px;
+            text-transform: uppercase;
+            transition: 0.3s;
+            box-shadow: 0 4px 12px rgba(0,204,102,0.2);
+        }
+        .partner-btn:hover { background-color: #00b359; }
+        
+        .telegram-btn {
+            background-color: #0088cc;
+            color: white;
+            padding: 10px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            display: block;
+            margin-top: 8px;
+            font-size: 12px;
+            transition: 0.3s;
+        }
+        .telegram-btn:hover { background-color: #0077b3; }
+
+        /* Form Inputs */
+        input { 
+            width: 92%; 
+            padding: 12px; 
+            margin: 8px 0; 
+            border-radius: 8px; 
+            border: 1px solid #1f293d; 
+            background-color: #070c14; 
+            color: white; 
+            font-size: 14px;
+            text-align: center;
+        }
+        input:focus {
+            outline: none;
+            border-color: #ff6600;
+        }
+        
+        .submit-btn { 
+            background-color: #ff6600; 
+            color: white; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            width: 100%; 
+            font-weight: bold; 
+            margin-top: 12px;
+            font-size: 14px;
+            text-transform: uppercase;
+            transition: 0.3s;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 12px rgba(255,102,0,0.2);
+        }
+        .submit-btn:hover { background-color: #e65c00; }
+        
+        .error { 
+            color: #ff4444; 
+            background-color: rgba(255, 68, 68, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px; 
+            font-size: 13px;
+        }
+        
+        /* Tech Badges */
+        .badge-container {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .tech-badge {
+            background-color: #121824;
+            color: #7f8fa4;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 9px;
+            border: 1px solid #1c2436;
+        }
     </style>
 </head>
 <body>
-
-<div class="login-container">
-    <div class="logo">MARKET AI</div>
-    <div class="sub-text">Premium Trading Signals Dashboard</div>
-
-    {% if error %}
-    <div class="error-msg">{{ error }}</div>
-    {% endif %}
-
-    <form action="/login" method="POST">
-        <div class="input-group">
-            <label>USERNAME</label>
-            <input type="text" name="username" required placeholder="Enter your username">
+    <div class="container">
+        <div class="bot-title">MarketAI Binary Bot</div>
+        <div class="bot-subtitle">AI Signal Engine v3.0</div>
+        
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+        
+        <div class="activation-box">
+            <div class="activation-header">⚡ Activate Your Access (FREE)</div>
+            <div class="step-item"><span class="step-number">1</span> Create a free Quotex account via link below</div>
+            <div class="step-item"><span class="step-number">2</span> Deposit funds and copy your <b>Quotex Trader ID</b></div>
+            <div class="step-item"><span class="step-number">3</span> Send ID on Telegram to get credentials instantly</div>
+            
+            <a href="YOUR_QUOTEX_AFFILIATE_LINK" target="_blank" class="partner-btn">
+                🔗 Create Quotex Account
+            </a>
+            
+            <a href="https://t.me/YOUR_TELEGRAM_USERNAME" target="_blank" class="telegram-btn">
+                ✈️ Send ID - @YOUR_TELEGRAM_USERNAME
+            </a>
         </div>
-        <div class="input-group">
-            <label>PASSWORD</label>
-            <input type="password" name="password" required placeholder="Enter your password">
+        
+        <form method="POST" action="/login">
+            <input type="text" name="username" placeholder="Trader ID / Username" required>
+            <input type="password" name="password" placeholder="Access Key" required>
+            <button type="submit" class="submit-btn">Initiate System</button>
+        </form>
+        
+        <div class="badge-container">
+            <span class="tech-badge">• ChatGPT 4o</span>
+            <span class="tech-badge">• Grok 2</span>
+            <span class="tech-badge">• Claude 3.5</span>
+            <span class="tech-badge">• Gemini Pro</span>
+            <span class="tech-badge">• Bookmap AI</span>
         </div>
-        <button type="submit" class="btn-login">LOGIN NOW</button>
-    </form>
-
-    <div class="divider"><span>OR</span></div>
-
-    <div style="font-size: 12px; color: #9ca3af; margin-bottom: 10px;">Don't have an account?</div>
-    
-    <a href="https://t.me/Shijinrajsl" target="_blank" class="btn-telegram">
-        GET PREMIUM ACCESS (TELEGRAM)
-    </a>
-</div>
-
+    </div>
 </body>
 </html>
