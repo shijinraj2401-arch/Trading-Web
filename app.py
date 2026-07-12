@@ -4,9 +4,8 @@ import pandas as pd
 import ta
 import math
 import os
+import requests
 from datetime import datetime, timedelta
-import firebase_admin
-from firebase_admin import credentials, db
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_trading_key_123'
@@ -14,15 +13,9 @@ app.secret_key = 'super_secret_trading_key_123'
 ADMIN_USERNAME = "shijin_admin"       
 ADMIN_PASSWORD = "Secure@Trade2026#"   
 
-# --- ഫയർബേസ് പെർമനന്റ് ഡാറ്റാബേസ് ---
-try:
-    cred = credentials.Certificate("firebase_key.json")
-    if not firebase_admin._apps:
-        firebase_admin.initialize_app(cred, {
-            'databaseURL': 'https://tradingvip-default-rtdb.firebaseio.com//'
-        })
-except Exception as e:
-    print("Firebase connection error:", e)
+# --- ഫയൽ ഇല്ലാത്ത ഡയറക്ട് ഫയർബേസ് ലിങ്ക് ---
+# താഴെയുള്ള ലിങ്ക് ബ്രോയുടെ ഫയർബേസ് ലിങ്ക് ആണോ എന്ന് ഉറപ്പാക്കുക
+FIREBASE_URL = "https://tradingvip-default-rtdb.firebaseio.com"
 # ----------------------------------------------
 
 @app.route('/')
@@ -41,8 +34,8 @@ def login():
         return redirect(url_for('admin_panel'))
         
     try:
-        user_ref = db.reference(f'users/{username}')
-        user_data = user_ref.get()
+        response = requests.get(f"{FIREBASE_URL}/users/{username}.json")
+        user_data = response.json() if response.status_code == 200 else None
         
         if user_data and user_data.get('password') == password:
             expiry_date = datetime.strptime(user_data.get('expiry'), "%Y-%m-%d")
@@ -60,9 +53,13 @@ def login():
 def admin_panel():
     if session.get('user') != 'admin':
         return "Unauthorized", 401
-    users_ref = db.reference('users')
-    users_data = users_ref.get()
-    return render_template('admin.html', users=users_data if users_data else {})
+    try:
+        response = requests.get(f"{FIREBASE_URL}/users.json")
+        users_data = response.json() if response.status_code == 200 else {}
+        if not users_data: users_data = {}
+    except:
+        users_data = {}
+    return render_template('admin.html', users=users_data)
 
 @app.route('/admin/add_user', methods=['POST'])
 def add_user():
@@ -71,8 +68,8 @@ def add_user():
     password = request.form.get('password')
     expiry = request.form.get('expiry')
     
-    user_ref = db.reference(f'users/{username}')
-    user_ref.set({'password': password, 'expiry': expiry})
+    data = {'password': password, 'expiry': expiry}
+    requests.put(f"{FIREBASE_URL}/users/{username}.json", json=data)
     
     return redirect(url_for('admin_panel'))
 
@@ -88,8 +85,12 @@ def dashboard():
     current_user = session['user']
     user_expiry = "Unlimited"
     if current_user != 'admin':
-        user_data = db.reference(f'users/{current_user}').get()
-        user_expiry = user_data.get('expiry', 'N/A') if user_data else 'N/A'
+        try:
+            response = requests.get(f"{FIREBASE_URL}/users/{current_user}.json")
+            user_data = response.json() if response.status_code == 200 else None
+            user_expiry = user_data.get('expiry', 'N/A') if user_data else 'N/A'
+        except:
+            user_expiry = 'N/A'
     return render_template('index.html', expiry=user_expiry, username=current_user)
 
 @app.route('/api/signal')
